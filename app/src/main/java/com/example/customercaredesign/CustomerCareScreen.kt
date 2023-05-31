@@ -8,6 +8,7 @@ import android.webkit.URLUtil
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,9 +21,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Email
@@ -38,16 +41,21 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,6 +66,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,12 +74,14 @@ import androidx.core.graphics.toColorInt
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.launch
+
 
 var CardItemsListData: MutableList<Model> =
     mutableListOf(
-        Model("Call", "+1 (234)  234-234", "8:00AM - 8:00PM from Mon-Sat", Icons.Default.Phone),
-        Model("Email", "support@viewlift.com", "", Icons.Default.Email),
-        Model("Enquiry", "", "", Icons.Default.Send),
+        Model("Call", "+1 (234)  234-234", "8:00AM - 8:00PM from Mon-Sat", R.drawable.phone_icon),
+        Model("Email", "support@viewlift.com", "", R.drawable.email_icon),
+//        Model("Enquiry", "", "", Icons.Default.Send),
     )
 
 var BottomCardListData: MutableList<BottomCardModel> =
@@ -139,7 +150,7 @@ fun CardItems(
     type: String,
     title: String,
     subTitle: String,
-    icon: ImageVector,
+    icon: Int,
     modifier: Modifier = Modifier
 ) {
     if (type.equals("Call")){
@@ -160,7 +171,7 @@ fun CardItemCallUi(
     type: String,
     title: String,
     subTitle: String,
-    icon: ImageVector,
+    icon: Int,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -168,7 +179,7 @@ fun CardItemCallUi(
         modifier = modifier
             .fillMaxWidth()
             .clickable {
-                openDialpad(title,context)
+                openDialpad(title, context)
             }
             .wrapContentHeight()
             .padding(top = 15.dp)
@@ -176,24 +187,27 @@ fun CardItemCallUi(
 
         Row(
             modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = type,
                 color = lightGrayColor,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.W400
+                fontWeight = FontWeight.W400,
+                fontFamily = acumin_pro
             )
-            Icon(imageVector = icon, contentDescription = null, tint = lightGrayColor)
+            Image(painter = painterResource(id = icon), contentDescription = "phone_icon",modifier=modifier.size(12.dp))
         }
         Spacer(modifier = modifier.height(14.dp))
-        Text(text = title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.W600)
+        Text(text = title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.W600, fontFamily = acumin_pro)
         Spacer(modifier = modifier.height(6.dp))
         Text(
             text = subTitle,
             color = lightGrayColor,
             fontSize = 14.sp,
-            fontWeight = FontWeight.W400
+            fontWeight = FontWeight.W400,
+            fontFamily = acumin_pro
         )
         Spacer(modifier = modifier.height(10.dp))
         Divider(
@@ -209,7 +223,7 @@ fun CardItemCallUi(
 fun CardItemEmailUi(
     type: String,
     title: String,
-    icon: ImageVector,
+    icon: Int,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -217,7 +231,7 @@ fun CardItemEmailUi(
         modifier = modifier
             .fillMaxWidth()
             .clickable {
-                openEmailClient(title,context)
+                openEmailClient(title, context)
             }
             .wrapContentHeight()
             .padding(top = 15.dp)
@@ -225,18 +239,21 @@ fun CardItemEmailUi(
 
         Row(
             modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = type,
                 color = lightGrayColor,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.W400
+                fontWeight = FontWeight.W400,
+                fontFamily = acumin_pro
+
             )
-            Icon(imageVector = icon, contentDescription = null, tint = lightGrayColor)
+            Image(painter = painterResource(id = icon), contentDescription = "email_icon",modifier=modifier.size(12.dp))
         }
         Spacer(modifier = modifier.height(14.dp))
-        Text(text = title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.W600)
+        Text(text = title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.W600,fontFamily = acumin_pro)
         Spacer(modifier = modifier.height(10.dp))
         Divider(
             modifier = modifier
@@ -250,7 +267,7 @@ fun CardItemEmailUi(
 @Composable
 fun CardItemEnquiryUi(
     type: String,
-    icon: ImageVector,
+    icon: Int,
     modifier: Modifier = Modifier
 ) {
     var messageText by remember { mutableStateOf("") }
@@ -278,7 +295,7 @@ fun CardItemEnquiryUi(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.W400
             )
-            Icon(imageVector = icon, contentDescription = null, tint = lightGrayColor)
+            Image(painter = painterResource(id = icon), contentDescription = "enquiry_icon",modifier=modifier.size(12.dp))
         }
         Spacer(modifier = modifier.height(14.dp))
         TextField(
@@ -359,15 +376,22 @@ fun CardItemEnquiryUi(
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomCardUi(title: String, modifier: Modifier = Modifier) {
+    var openBS by rememberSaveable { mutableStateOf(false) }
+    var messageText by remember { mutableStateOf("") }
+    val openBottomSheet = rememberModalBottomSheetState()
 
     Row(
         modifier = modifier
             .height(60.dp)
             .fillMaxWidth()
             .background(buttonColor)
-            .padding(16.dp),
+            .padding(16.dp)
+            .clickable {
+                openBS = !openBS
+            },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -375,7 +399,8 @@ fun BottomCardUi(title: String, modifier: Modifier = Modifier) {
             text = title,
             color = Color.White,
             fontSize = 14.sp,
-            fontWeight = FontWeight.W700
+            fontWeight = FontWeight.W700,
+            fontFamily = acumin_pro
         )
         Icon(
             imageVector = Icons.Default.KeyboardArrowRight,
@@ -384,8 +409,124 @@ fun BottomCardUi(title: String, modifier: Modifier = Modifier) {
         )
     }
     Spacer(modifier = Modifier.height(8.dp))
+    if (openBS) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                openBS = false
+            },
+            sheetState = openBottomSheet,
+            containerColor = lightBackgroundColor
+        ) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 64.dp)) {
+
+                val textValue = "Tell us about MSN"
+                val waringText = "We value your feedback and help us improve our better customer experience."
+
+                Text(
+                    text = textValue ,
+                    modifier = Modifier
+                        .padding(bottom = 4.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Start,
+                    fontFamily = acumin_pro,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.W700,
+                    color = Color.White,
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text =waringText,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Start,
+                    fontFamily = acumin_pro,
+                    fontWeight = FontWeight.W400,
+                    fontSize = 14.sp,
+                    color = lightgreyTextColor
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    value = messageText,
+                    onValueChange = { messageText = it },
+                    placeholder = {
+                        Text(
+                            "Add a comment about your thought",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.W400,
+                            textAlign = TextAlign.Start,
+                        )
+                    },
+                    modifier = Modifier
+                        .height(80.dp)
+                        .fillMaxWidth(),
+                    textStyle = TextStyle(Color.White),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        cursorColor = Color.White,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = lightGrayColor,
+                    ),
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Button(
+                    onClick = {
+//
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = redButtonColor),
+                    modifier = Modifier
+                        .height(40.dp)
+                        .fillMaxWidth(),
+                    shape = RectangleShape
+                ) {
+                    Text(
+                        color = Color.White,
+                        text = "Confirm",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W600,
+                        fontFamily = acumin_pro
+                    )
+                }
+
+            }
+        }
+    }
 
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BottomSheet() {
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
 
 
 
